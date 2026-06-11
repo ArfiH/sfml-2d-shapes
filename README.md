@@ -1,4 +1,4 @@
-# Assignment1
+# Assignment 1 of COMP4300 by Dave Churchill
 
 A 2D game built with:
 
