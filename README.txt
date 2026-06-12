@@ -86,7 +86,7 @@ Assignment Hints
     2. shape.getGlobalBounds();
     - this method will take into account any scale, translation, etc. that has been applied to the shape. May be useful for the ui scaling.
 
-- Similarly, a sf::Text element's bounding rectangle ca also be retrieved via text.getLocalBounds(), which you will need to use to center the text properly within a shape.
+- Similarly, a sf::Text element's bounding rectangle can also be retrieved via text.getLocalBounds(), which you will need to use to center the text properly within a shape.
 
 - Please use C++ file reading (std::ifstream makes this easy) rather than C-style FILE reading. You will lose marks for using older C functions!
 

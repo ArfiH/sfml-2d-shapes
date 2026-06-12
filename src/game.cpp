@@ -7,10 +7,10 @@
 #include "imgui.h"
 #include "imgui-SFML.h"
 
-class CircleShape {
+class Shape {
 public:
-    std::string m_name      {"CRed"};
-    std::string m_shape     {"Circle"};
+    std::string m_name      {""};
+    std::string m_shape     {""};
     float m_x               {100.f};
     float m_y               {100.f};
     float m_speedX          {2.f};
@@ -19,10 +19,12 @@ public:
     int m_green             {0};
     int m_blue              {0};
     float m_radius          {50.f};
+    float m_w               {100.f}; // will be used for rectangles
+    float m_h               {100.f}; // will be used for rectangles
     bool m_isAlive          {true};
     bool m_isTextAlive      {true};
 
-    CircleShape(const std::string& name, const std:: string& shape, float x, float y, float speedX, float speedY, int red, int green, int blue, float rad)
+    Shape(const std::string& name, const std:: string& shape, float x, float y, float speedX, float speedY, int red, int green, int blue, float rad)
         : m_name        (name)  
         , m_shape       (shape)
         , m_x           (x)
@@ -37,28 +39,7 @@ public:
         , m_isTextAlive (true)
     {}
 
-    void print() const {
-        std::cout << "name: " << m_name << ", shape: " << m_shape << ", x: " << m_x << ", y: " << m_y << ", sx: " << m_speedX << ", sy: " << m_speedY << ", r: " << m_red << ", g: " << m_green << ", b: " << m_blue<< ", rad: " << m_radius << '\n';
-    }
-};
-
-class RectShape {
-public:
-    std::string m_name      {"RGrey"};
-    std::string m_shape     {"Rectangle"};
-    float m_x               {100.f};
-    float m_y               {100.f};
-    float m_speedX          {2.f};
-    float m_speedY          {4.f};
-    int m_red               {255};
-    int m_green             {0};
-    int m_blue              {0};
-    float m_w               {100.f};
-    float m_h               {100.f};
-    bool m_isAlive          {true};
-    bool m_isTextAlive      {true};
-
-    RectShape(const std::string& name, const std:: string& shape, float x, float y, float speedX, float speedY, int red, int green, int blue, float w, float h)
+    Shape(const std::string& name, const std:: string& shape, float x, float y, float speedX, float speedY, int red, int green, int blue, float w, float h)
         : m_name        (name)  
         , m_shape       (shape)
         , m_x           (x)
@@ -74,33 +55,41 @@ public:
         , m_isTextAlive (true)
     {}
 
-    void print() const {
-        std::cout << "name: " << m_name << ", shape: " << m_shape << ", x: " << m_x << ", y: " << m_y << ", sx: " << m_speedX << ", sy: " << m_speedY << ", r: " << m_red << ", g: " << m_green << ", b: " << m_blue<< ", w: " << m_w << ", h: " << m_h << '\n';
+    void printCircle() const {
+        std::cout << "name: " << m_name << ", shape: " << m_shape << ", x: " << m_x << ", y: " << m_y << ", sx: " << m_speedX << ", sy: " << m_speedY << ", r: " << m_red << ", g: " << m_green << ", b: " << m_blue<< ", rad: " << m_radius << '\n';
     }
+
+    void printRectangle() const {
+        std::cout << "name: " << m_name << ", shape: " << m_shape << ", x: " << m_x << ", y: " << m_y << ", sx: " << m_speedX << ", sy: " << m_speedY << ", r: " << m_red << ", g: " << m_green << ", b: " << m_blue<< ", w: " << m_w << ", h: " << m_h << '\n';
+    }    
 };
 
 
 int main(int argc, char* argv[])
 {
-    // let's make a shape that we will draw to the screen
-    float circleRadius = 50;    // radius to draw the circle
-    int circleSegments = 32;    // number of segments to draw the circle with
-    float circleSpeedX = 1.0f;  // we will use this to move the circle later
-    float circleSpeedY = 0.5f;  // you will read these values from the file
-    bool drawShape = true;     // whether to draw the circle
-    bool drawText = true;       // whether to draw the text
-    float rectW = 100.f;
-    float rectH = 100.f;
-    unsigned int wWidth = 1280;
-    unsigned int wHeight = 720;
-    std::string fontStr = "";
-    int textSize = 24;
-    float red, green, blue;
-    int circleCount = 0;
+    const int SCALE_FACTOR  = 50; 
+    float circleRadius      = 50;
+    int circleSegments      = 32;
+    float circleSpeedX      = 1.0f;
+    float circleSpeedY      = 0.5f;
+    bool drawShape          = true;
+    bool drawText           = true;
+    float rectW             = 100.f;
+    float rectH             = 100.f;
+    int shapeScale          = 0;
+    unsigned int wWidth     = 1280;
+    unsigned int wHeight    = 720;
+    std::string fontStr     = "";
+    int textSize            = 24;
+    float red               = 0;
+    float green             = 0;
+    float blue              = 0;
+    int circleCount         = 0;
+    int velocityX           = 0;
+    int velocityY           = 0;
 
     // vector to store all shapes
-    std::vector<CircleShape> cShapes;
-    std::vector<RectShape> rShapes;
+    std::vector<Shape> shapes;
     std::vector<sf::CircleShape> sfCircleShapes;
     std::vector<sf::RectangleShape> sfRectShapes;
     std::vector<sf::Text> sfCircleTexts;
@@ -149,15 +138,15 @@ int main(int argc, char* argv[])
             if (shape == "Circle") {
                 float rad;
                 fin >> rad;
-                cShapes.push_back(CircleShape(name, shape, x, y, speedX, speedY, r, g, b, rad));
-                cShapes.back().print();
+                shapes.push_back(Shape(name, shape, x, y, speedX, speedY, r, g, b, rad));
+                shapes.back().printCircle();
                 circleCount++;
             }
             else {
                 float w, h;
                 fin >> w >> h;
-                rShapes.push_back(RectShape(name, shape, x, y, speedX, speedY, r, g, b, w, h));
-                rShapes.back().print();
+                shapes.push_back(Shape(name, shape, x, y, speedX, speedY, r, g, b, w, h));
+                shapes.back().printRectangle();
             }
         }
     }
@@ -199,62 +188,58 @@ int main(int argc, char* argv[])
 
     // position the top-left corner of the text so that the text aligns on the bottom
     // text character size is in pixels, so move the text up from the bottom by its height
-    text.setPosition({
-        0.f,
-        static_cast<float>(wHeight - text.getCharacterSize())
-    });
+    text.setPosition({0.f, static_cast<float>(wHeight - text.getCharacterSize())});
+  
     // set up a character array to set the text
     char displayString[255] = "Sample Text";
 
-    for (const auto& shape : cShapes) {
-        // create the sfml circle shape based on our parameters
-        sf::CircleShape circle(shape.m_radius, 32); // create a circle shape with radius 50
-        circle.setPosition({shape.m_x, shape.m_y}); // set the top-left position of the circle
-        circle.setFillColor(sf::Color(shape.m_red, shape.m_green, shape.m_blue));
-        circle.setRadius(shape.m_radius);
+    for (const auto& shape : shapes) {
+        if (shape.m_shape == "Circle") {
+            // create the sfml circle shape based on our parameters
+            sf::CircleShape circle(shape.m_radius, 32); // create a circle shape with radius 50
+            circle.setPosition({shape.m_x, shape.m_y}); // set the top-left position of the circle
+            circle.setFillColor(sf::Color(shape.m_red, shape.m_green, shape.m_blue));
+            circle.setRadius(shape.m_radius);
 
-        // basic animation - move each shape if it's still in frame
-        sfCircleShapes.push_back(circle);
+            // basic animation - move each shape if it's still in frame
+            sfCircleShapes.push_back(circle);
+            
+            // set up the text object that will be drawn to the screen
+            sf::Text shapeText(myFont, shape.m_name, textSize);
 
-        // set up the text object that will be drawn to the screen
-        sf::Text shapeText(myFont, shape.m_name, textSize);
+            // set the color
+            shapeText.setFillColor(sf::Color(255 - shape.m_red, 255 - shape.m_green, 255 - shape.m_blue)); 
 
-        // set the color
-        shapeText.setFillColor(sf::Color(255 - shape.m_red, 255 - shape.m_green, 255 - shape.m_blue)); 
+            shapeText.setPosition({shape.m_x + shape.m_radius - textSize, shape.m_y + shape.m_radius - 10});
+            sfCircleTexts.push_back(shapeText);
+            std::cout << "Circle pushed\n";
+        }
+        else {
+            sf::RectangleShape rectangle({shape.m_w, shape.m_h});
+            rectangle.setPosition({shape.m_x, shape.m_y}); // set the top-left position of the rectangle
+            rectangle.setFillColor(sf::Color(shape.m_red, shape.m_green, shape.m_blue));
 
-        shapeText.setPosition({shape.m_x + shape.m_radius - textSize, shape.m_y + shape.m_radius - 10});
-        sfCircleTexts.push_back(shapeText);
-        std::cout << "Circle pushed\n";
-    }
+            // basic animation - move each shape if it's still in frame
+            sfRectShapes.push_back(rectangle);
 
-    for (const auto& shape : rShapes) {    
-        sf::RectangleShape rectangle({shape.m_w, shape.m_h});
-        rectangle.setPosition({shape.m_x, shape.m_y}); // set the top-left position of the rectangle
-        rectangle.setFillColor(sf::Color(shape.m_red, shape.m_green, shape.m_blue));
+            // set up the text object that will be drawn to the screen
+            sf::Text shapeText(myFont, shape.m_name, textSize);
 
-        // basic animation - move each shape if it's still in frame
-        sfRectShapes.push_back(rectangle);
+            // set the color
+            shapeText.setFillColor(sf::Color(255 - shape.m_red, 255 - shape.m_green, 255 - shape.m_blue)); 
 
-        // set up the text object that will be drawn to the screen
-        sf::Text shapeText(myFont, shape.m_name, textSize);
-
-        // set the color
-        shapeText.setFillColor(sf::Color(255 - shape.m_red, 255 - shape.m_green, 255 - shape.m_blue)); 
-
-        shapeText.setPosition({shape.m_x + (shape.m_w / 2.f) - textSize, shape.m_y + (shape.m_h / 2.f) - 10});
-        sfRectTexts.push_back(shapeText);
-        std::cout << "rectangle pushed\n";
+            shapeText.setPosition({shape.m_x + (shape.m_w / 2.f) - textSize, shape.m_y + (shape.m_h / 2.f) - 10});
+            sfRectTexts.push_back(shapeText);
+            std::cout << "rectangle pushed\n";
+        }
     }
 
     // Keep these variables persistent (static, class members, etc.)
     static std::vector<std::string> comboItems;
     static int selected_idx = 0; 
 
-    for (size_t i = 0; i < cShapes.size(); i++) {
-        comboItems.push_back(cShapes[i].m_name);
-    }
-    for (size_t i = 0; i < rShapes.size(); i++) {
-        comboItems.push_back(rShapes[i].m_name);
+    for (size_t i = 0; i < shapes.size(); i++) {
+        comboItems.push_back(shapes[i].m_name);
     }
 
 
@@ -306,16 +291,9 @@ int main(int argc, char* argv[])
                     std::cout << "Selected idx is " << selected_idx << '\n';
 
                     // set displayString to selected shape's name
-                    size_t i = 0;
-                    if (selected_idx < circleCount) { 
-                        while (displayString[i] = cShapes[selected_idx].m_name[i]) {
-                            i++;
-                        }
-                    }
-                    else {
-                        while (displayString[i] = rShapes[selected_idx - circleCount].m_name[i]) {
-                            i++;
-                        }
+                    size_t i = 0;                
+                    while (displayString[i] = shapes[selected_idx].m_name[i]) {
+                        i++;
                     }
                 }
 
@@ -330,69 +308,71 @@ int main(int argc, char* argv[])
 
         ImGui::Text("Toggle visibilty");
         if (ImGui::Checkbox("Draw Shapes", &drawShape)) {
-            if (selected_idx < circleCount) {
-                cShapes[selected_idx].m_isAlive = drawShape;
-                
-                std::cout << cShapes[selected_idx].m_name << "\'s visibilty is set to " << cShapes[selected_idx].m_isAlive << '\n';
-            }
-            else {
-                rShapes[selected_idx - circleCount].m_isAlive = drawShape;
-                
-                std::cout << rShapes[selected_idx - circleCount].m_name << "\'s visibilty is set to " << rShapes[selected_idx - circleCount].m_isAlive << '\n';
-            }
+            shapes[selected_idx].m_isAlive = drawShape;
+            std::cout << shapes[selected_idx].m_name << "\'s visibilty is set to " << shapes[selected_idx].m_isAlive << '\n';
         }
 
         ImGui::SameLine();
         if (ImGui::Checkbox("Draw Text", &drawText)) {
-            if (selected_idx < circleCount) {
-                cShapes[selected_idx].m_isTextAlive = drawText;
-                
-                std::cout << cShapes[selected_idx].m_name << "\'s text visibilty is set to " << cShapes[selected_idx].m_isTextAlive << '\n';
-            }
-            else {
-                rShapes[selected_idx - circleCount].m_isTextAlive = drawText;
-                
-                std::cout << rShapes[selected_idx - circleCount].m_name << "\'s text visibilty is set to " << rShapes[selected_idx - circleCount].m_isTextAlive << '\n';
-            }    
+            shapes[selected_idx].m_isTextAlive = drawText;    
+            std::cout << shapes[selected_idx].m_name << "\'s text visibilty is set to " << shapes[selected_idx].m_isTextAlive << '\n'; 
         }
 
-        if (ImGui::SliderFloat("Radius", &circleRadius, 0.0f, 300.0f)) {
-            if (selected_idx < circleCount) {
+        ImGui::Text("Velocity");
+        if (ImGui::SliderInt("x velocity", &velocityX, -8, 8)) {
+            shapes[selected_idx].m_speedX = velocityX; 
+        }
+        if (ImGui::SliderInt("y velocity", &velocityY, -8, 8)) {
+            shapes[selected_idx].m_speedY = velocityY; 
+        }
+
+        if (ImGui::SliderInt("Scale", &shapeScale, 0, 4)) {
+            if (shapes[selected_idx].m_shape == "Circle") {
+                float newRadius = circleRadius + shapeScale * SCALE_FACTOR;
+                sfCircleShapes[selected_idx].setRadius(newRadius);
+                shapes[selected_idx].m_radius = newRadius;
+
+                // update text's position to keep text in centre
+                sfCircleTexts[selected_idx].setPosition({sfCircleShapes[selected_idx].getPosition().x + shapes[selected_idx].m_radius - textSize, sfCircleShapes[selected_idx].getPosition().y + shapes[selected_idx].m_radius - 10});
+            }
+            else {
+                float newWidth = rectW + shapeScale * SCALE_FACTOR;
+                float newHeight = rectH + shapeScale * SCALE_FACTOR;
+                sfRectShapes[selected_idx - circleCount].setSize(sf::Vector2f(newWidth, newHeight)); 
+                shapes[selected_idx].m_w = newWidth;   
+                shapes[selected_idx].m_h = newHeight;
+
+                // update text's position to keep text in centre
+                sfRectTexts[selected_idx - circleCount].setPosition({sfRectShapes[selected_idx - circleCount].getPosition().x + (shapes[selected_idx].m_w / 2.f) - textSize, sfRectShapes[selected_idx - circleCount].getPosition().y + (shapes[selected_idx].m_h / 2.f) - 10});                   
+            }
+        }
+
+        if (shapes[selected_idx].m_shape == "Circle" && ImGui::SliderFloat("Radius", &circleRadius, 0.0f, 300.0f)) {
+            if (shapes[selected_idx].m_shape == "Circle") {
                 sfCircleShapes[selected_idx].setRadius(circleRadius);
             }
         }
         
-        if (ImGui::SliderFloat("Width", &rectW, 0.0f, 300.0f) || ImGui::SliderFloat("Height", &rectH, 0.0f, 300.0f)) {
-            sfRectShapes[selected_idx - circleCount].setSize(sf::Vector2f(rectW, rectH));
+        if (shapes[selected_idx].m_shape == "Rectangle" && ImGui::SliderFloat("Width", &rectW, 0.0f, 300.0f) || ImGui::SliderFloat("Height", &rectH, 0.0f, 300.0f)) {
+            if (shapes[selected_idx].m_shape == "Rectangle")
+                sfRectShapes[selected_idx - circleCount].setSize(sf::Vector2f(rectW, rectH));
         }
         
-        if (ImGui::SliderInt("Point count", &circleSegments, 3, 64)) {
-            if (selected_idx < circleCount) {
+        if (shapes[selected_idx].m_shape == "Circle" && ImGui::SliderInt("Point count", &circleSegments, 3, 64)) {
+            if (shapes[selected_idx].m_shape == "Circle") {
                 sfCircleShapes[selected_idx].setPointCount(circleSegments);
             }
         }
 
         if (ImGui::ColorEdit3("Color Shape", c)) {
-            if (selected_idx < circleCount) {    
-                sfCircleShapes[selected_idx].setFillColor(
-                    sf::Color(
-                        static_cast<std::uint8_t>(c[0] * 255),
-                        static_cast<std::uint8_t>(c[1] * 255),
-                        static_cast<std::uint8_t>(c[2] * 255)
-                    )
-                );
+            if (shapes[selected_idx].m_shape == "Circle") {    
+                sfCircleShapes[selected_idx].setFillColor(sf::Color((c[0] * 255),(c[1] * 255),(c[2] * 255)));
                 
                 // Make the text color the complement of shape color
                 sfCircleTexts[selected_idx].setFillColor(sf::Color(255 - (c[0] * 255), 255 - (c[1] * 255), 255 - (c[2] * 255)));
             }
             else {
-                sfRectShapes[selected_idx - circleCount].setFillColor(
-                    sf::Color(
-                        static_cast<std::uint8_t>(c[0] * 255),
-                        static_cast<std::uint8_t>(c[1] * 255),
-                        static_cast<std::uint8_t>(c[2] * 255)
-                    )
-                );
+                sfRectShapes[selected_idx - circleCount].setFillColor(sf::Color((c[0] * 255),(c[1] * 255),(c[2] * 255)));
 
                 // Make the text color the complement of shape color
                 sfRectTexts[selected_idx - circleCount].setFillColor(sf::Color(255 - (c[0] * 255), 255 - (c[1] * 255), 255 - (c[2] * 255)));
@@ -403,24 +383,31 @@ int main(int argc, char* argv[])
 
         if (ImGui::Button("Set Text"))
         {
-            if (selected_idx < circleCount) {
+            if (shapes[selected_idx].m_shape == "Circle") {
                 sfCircleTexts[selected_idx].setString(displayString);
             }
             else {
                 sfRectTexts[selected_idx - circleCount].setString(displayString);
             }
-            text.setString(displayString);
         }
         ImGui::SameLine();
         if (ImGui::Button("Reset"))
         {
-            for (size_t i = 0; i < sfRectShapes.size(); i++) {
-                sfRectShapes[i].setPosition({rShapes[i].m_x, rShapes[i].m_y});
-                sfRectTexts[i].setPosition({rShapes[i].m_x + (rShapes[i].m_w / 2.f) - textSize, rShapes[i].m_y + (rShapes[i].m_h / 2.f) - 10});
-            }
             for (size_t i = 0; i < sfCircleShapes.size(); i++) {
-                sfCircleShapes[i].setPosition({cShapes[i].m_x, cShapes[i].m_y});
-                sfCircleTexts[i].setPosition({cShapes[i].m_x + cShapes[i].m_radius - textSize, cShapes[i].m_y + cShapes[i].m_radius - 10});
+                if (shapes[selected_idx].m_shape == "Circle") {
+                    sfCircleTexts[selected_idx].setString(shapes[selected_idx].m_name);
+                }
+
+                sfCircleShapes[i].setPosition({shapes[i].m_x, shapes[i].m_y});
+                sfCircleTexts[i].setPosition({shapes[i].m_x + shapes[i].m_radius - textSize, shapes[i].m_y + shapes[i].m_radius - 10});
+            }
+            for (size_t i = 0; i < sfRectShapes.size(); i++) {
+                if (shapes[selected_idx].m_shape == "Rectangle") {
+                    sfRectTexts[selected_idx - circleCount].setString(shapes[selected_idx].m_name);
+                }
+
+                sfRectShapes[i].setPosition({shapes[i + circleCount].m_x, shapes[i + circleCount].m_y});
+                sfRectTexts[i].setPosition({shapes[i + circleCount].m_x + (shapes[i + circleCount].m_w / 2.f) - textSize, shapes[i + circleCount].m_y + (shapes[i + circleCount].m_h / 2.f) - 10});
             }
         }
 
@@ -436,19 +423,19 @@ int main(int argc, char* argv[])
             float currentX = position.x;
             float currentY = position.y;
             
-            if (currentX < 0 || currentX + 2 * cShapes[i].m_radius > wWidth) { 
-                cShapes[i].m_speedX *= -1.f;
+            if (currentX < 0 || currentX + 2 * shapes[i].m_radius > wWidth) { 
+                shapes[i].m_speedX *= -1.f;
             }
-            if (currentY < 0 || currentY + 2 * cShapes[i].m_radius > wHeight) {
-                cShapes[i].m_speedY *= -1.f;
+            if (currentY < 0 || currentY + 2 * shapes[i].m_radius > wHeight) {
+                shapes[i].m_speedY *= -1.f;
             }
-            sfCircleShapes[i].move({cShapes[i].m_speedX, cShapes[i].m_speedY});
-            if (cShapes[i].m_isAlive) {
+            sfCircleShapes[i].move({shapes[i].m_speedX, shapes[i].m_speedY});
+            if (shapes[i].m_isAlive) {
                 window.draw(sfCircleShapes[i]);
             }
 
-            sfCircleTexts[i].move({cShapes[i].m_speedX, cShapes[i].m_speedY});
-            if (cShapes[i].m_isTextAlive) {
+            sfCircleTexts[i].move({shapes[i].m_speedX, shapes[i].m_speedY});
+            if (shapes[i].m_isTextAlive) {
                 window.draw(sfCircleTexts[i]);
             }
         }
@@ -458,27 +445,23 @@ int main(int argc, char* argv[])
             float currentX = position.x;
             float currentY = position.y;
             
-            if (currentX < 0 || currentX + rShapes[i].m_w > wWidth) { 
-                rShapes[i].m_speedX *= -1.f;
+            if (currentX < 0 || currentX + shapes[i + circleCount].m_w > wWidth) { 
+                shapes[i + circleCount].m_speedX *= -1.f;
             }
-            if (currentY < 0 || currentY + rShapes[i].m_h > wHeight) {
-                rShapes[i].m_speedY *= -1.f;
+            if (currentY < 0 || currentY + shapes[i + circleCount].m_h > wHeight) {
+                shapes[i + circleCount].m_speedY *= -1.f;
             }
-            sfRectShapes[i].move({rShapes[i].m_speedX, rShapes[i].m_speedY});
-            if (rShapes[i].m_isAlive) {
+            sfRectShapes[i].move({shapes[i + circleCount].m_speedX, shapes[i + circleCount].m_speedY});
+            if (shapes[i + circleCount].m_isAlive) {
                 window.draw(sfRectShapes[i]);
             }
 
-            sfRectTexts[i].move({rShapes[i].m_speedX, rShapes[i].m_speedY});
-            if (rShapes[i].m_isTextAlive) {
+            sfRectTexts[i].move({shapes[i + circleCount].m_speedX, shapes[i + circleCount].m_speedY});
+            if (shapes[i + circleCount].m_isTextAlive) {
                 window.draw(sfRectTexts[i]);
             }
         }
-    
-        if (drawText)       // draw the text if the boolean is true
-        {
-            window.draw(text);
-        }
+
         ImGui::SFML::Render(window);    // draw the ui last so it's on top
         window.display();               // call the window display function
     }
