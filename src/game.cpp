@@ -9,28 +9,32 @@
 
 class CircleShape {
 public:
-    std::string m_name  {"CRed"};
-    std::string m_shape {"Circle"};
-    float m_x           {100.f};
-    float m_y           {100.f};
-    float m_speedX      {2.f};
-    float m_speedY      {4.f};
-    int m_red           {255};
-    int m_green         {0};
-    int m_blue          {0};
-    float m_radius      {50.f};
+    std::string m_name      {"CRed"};
+    std::string m_shape     {"Circle"};
+    float m_x               {100.f};
+    float m_y               {100.f};
+    float m_speedX          {2.f};
+    float m_speedY          {4.f};
+    int m_red               {255};
+    int m_green             {0};
+    int m_blue              {0};
+    float m_radius          {50.f};
+    bool m_isAlive          {true};
+    bool m_isTextAlive      {true};
 
     CircleShape(const std::string& name, const std:: string& shape, float x, float y, float speedX, float speedY, int red, int green, int blue, float rad)
-        : m_name    (name)  
-        , m_shape   (shape)
-        , m_x       (x)
-        , m_y       (y)
-        , m_speedX  (speedX)
-        , m_speedY  (speedY)
-        , m_red     (red)
-        , m_green   (green)
-        , m_blue    (blue)
-        , m_radius  (rad) 
+        : m_name        (name)  
+        , m_shape       (shape)
+        , m_x           (x)
+        , m_y           (y)
+        , m_speedX      (speedX)
+        , m_speedY      (speedY)
+        , m_red         (red)
+        , m_green       (green)
+        , m_blue        (blue)
+        , m_radius      (rad) 
+        , m_isAlive     (true)
+        , m_isTextAlive (true)
     {}
 
     void print() const {
@@ -40,30 +44,34 @@ public:
 
 class RectShape {
 public:
-    std::string m_name  {"RGrey"};
-    std::string m_shape {"Rectangle"};
-    float m_x           {100.f};
-    float m_y           {100.f};
-    float m_speedX      {2.f};
-    float m_speedY      {4.f};
-    int m_red           {255};
-    int m_green         {0};
-    int m_blue          {0};
-    float m_w           {100.f};
-    float m_h           {100.f};
+    std::string m_name      {"RGrey"};
+    std::string m_shape     {"Rectangle"};
+    float m_x               {100.f};
+    float m_y               {100.f};
+    float m_speedX          {2.f};
+    float m_speedY          {4.f};
+    int m_red               {255};
+    int m_green             {0};
+    int m_blue              {0};
+    float m_w               {100.f};
+    float m_h               {100.f};
+    bool m_isAlive          {true};
+    bool m_isTextAlive      {true};
 
     RectShape(const std::string& name, const std:: string& shape, float x, float y, float speedX, float speedY, int red, int green, int blue, float w, float h)
-        : m_name    (name)  
-        , m_shape   (shape)
-        , m_x       (x)
-        , m_y       (y)
-        , m_speedX  (speedX)
-        , m_speedY  (speedY)
-        , m_red     (red)
-        , m_green   (green)
-        , m_blue    (blue)
-        , m_w       (w)
-        , m_h       (h)
+        : m_name        (name)  
+        , m_shape       (shape)
+        , m_x           (x)
+        , m_y           (y)
+        , m_speedX      (speedX)
+        , m_speedY      (speedY)
+        , m_red         (red)
+        , m_green       (green)
+        , m_blue        (blue)
+        , m_w           (w)
+        , m_h           (h)
+        , m_isAlive     (true)
+        , m_isTextAlive (true)
     {}
 
     void print() const {
@@ -79,7 +87,7 @@ int main(int argc, char* argv[])
     int circleSegments = 32;    // number of segments to draw the circle with
     float circleSpeedX = 1.0f;  // we will use this to move the circle later
     float circleSpeedY = 0.5f;  // you will read these values from the file
-    bool drawCircle = true;     // whether to draw the circle
+    bool drawShape = true;     // whether to draw the circle
     bool drawText = true;       // whether to draw the text
     float rectW = 100.f;
     float rectH = 100.f;
@@ -126,7 +134,6 @@ int main(int argc, char* argv[])
             fin >> fontStr;
             fin >> textSize;
             fin >> red >> green >> blue;
-            std::cout << red << ' ' << green << ' ' << blue << '\n';
         }
         else {
             std::string shape = configStr;
@@ -282,15 +289,11 @@ int main(int argc, char* argv[])
 
         // draw the UI
         ImGui::Begin("Debug Window");
-        ImGui::Text("Toggle visibilty");
-        ImGui::Checkbox("Draw Shapes", &drawCircle);
-        ImGui::SameLine();
-        ImGui::Checkbox("Draw Text", &drawText);
 
         // Get the text preview string of the currently chosen item
         const char* combo_preview_value = comboItems[selected_idx].c_str();
 
-        if (ImGui::BeginCombo("Select circle", combo_preview_value)) 
+        if (ImGui::BeginCombo("Select shape", combo_preview_value)) 
         {
             for (int n = 0; n < comboItems.size(); n++) 
             {
@@ -300,7 +303,20 @@ int main(int argc, char* argv[])
                 if (ImGui::Selectable(comboItems[n].c_str(), is_selected)) 
                 {
                     selected_idx = n; // Update selection when clicked
-                    std::cout << "Selected idx is " << selected_idx << '\n'; 
+                    std::cout << "Selected idx is " << selected_idx << '\n';
+
+                    // set displayString to selected shape's name
+                    size_t i = 0;
+                    if (selected_idx < circleCount) { 
+                        while (displayString[i] = cShapes[selected_idx].m_name[i]) {
+                            i++;
+                        }
+                    }
+                    else {
+                        while (displayString[i] = rShapes[selected_idx - circleCount].m_name[i]) {
+                            i++;
+                        }
+                    }
                 }
 
                 // Set the initial focus when opening the combo box
@@ -310,6 +326,34 @@ int main(int argc, char* argv[])
                 }
             }
             ImGui::EndCombo(); // Must always match BeginCombo() if it returns true
+        }
+
+        ImGui::Text("Toggle visibilty");
+        if (ImGui::Checkbox("Draw Shapes", &drawShape)) {
+            if (selected_idx < circleCount) {
+                cShapes[selected_idx].m_isAlive = drawShape;
+                
+                std::cout << cShapes[selected_idx].m_name << "\'s visibilty is set to " << cShapes[selected_idx].m_isAlive << '\n';
+            }
+            else {
+                rShapes[selected_idx - circleCount].m_isAlive = drawShape;
+                
+                std::cout << rShapes[selected_idx - circleCount].m_name << "\'s visibilty is set to " << rShapes[selected_idx - circleCount].m_isAlive << '\n';
+            }
+        }
+
+        ImGui::SameLine();
+        if (ImGui::Checkbox("Draw Text", &drawText)) {
+            if (selected_idx < circleCount) {
+                cShapes[selected_idx].m_isTextAlive = drawText;
+                
+                std::cout << cShapes[selected_idx].m_name << "\'s text visibilty is set to " << cShapes[selected_idx].m_isTextAlive << '\n';
+            }
+            else {
+                rShapes[selected_idx - circleCount].m_isTextAlive = drawText;
+                
+                std::cout << rShapes[selected_idx - circleCount].m_name << "\'s text visibilty is set to " << rShapes[selected_idx - circleCount].m_isTextAlive << '\n';
+            }    
         }
 
         if (ImGui::SliderFloat("Radius", &circleRadius, 0.0f, 300.0f)) {
@@ -359,6 +403,12 @@ int main(int argc, char* argv[])
 
         if (ImGui::Button("Set Text"))
         {
+            if (selected_idx < circleCount) {
+                sfCircleTexts[selected_idx].setString(displayString);
+            }
+            else {
+                sfRectTexts[selected_idx - circleCount].setString(displayString);
+            }
             text.setString(displayString);
         }
         ImGui::SameLine();
@@ -366,9 +416,11 @@ int main(int argc, char* argv[])
         {
             for (size_t i = 0; i < sfRectShapes.size(); i++) {
                 sfRectShapes[i].setPosition({rShapes[i].m_x, rShapes[i].m_y});
+                sfRectTexts[i].setPosition({rShapes[i].m_x + (rShapes[i].m_w / 2.f) - textSize, rShapes[i].m_y + (rShapes[i].m_h / 2.f) - 10});
             }
             for (size_t i = 0; i < sfCircleShapes.size(); i++) {
-                sfCircleShapes[i].setPosition({rShapes[i].m_x, rShapes[i].m_y});
+                sfCircleShapes[i].setPosition({cShapes[i].m_x, cShapes[i].m_y});
+                sfCircleTexts[i].setPosition({cShapes[i].m_x + cShapes[i].m_radius - textSize, cShapes[i].m_y + cShapes[i].m_radius - 10});
             }
         }
 
@@ -378,45 +430,51 @@ int main(int argc, char* argv[])
         window.clear();     // clear the window of anything previously drawn
 
         // window.draw(circle);
-        if (drawCircle)     // draw the circle if the boolean is true
-        {
-            for (size_t i = 0; i < sfCircleShapes.size(); i++) {
-                sf::Vector2f position = sfCircleShapes[i].getPosition();
-                float currentX = position.x;
-                float currentY = position.y;
-                
-                if (currentX < 0 || currentX + 2 * cShapes[i].m_radius > wWidth) { 
-                    cShapes[i].m_speedX *= -1.f;
-                }
-                if (currentY < 0 || currentY + 2 * cShapes[i].m_radius > wHeight) {
-                    cShapes[i].m_speedY *= -1.f;
-                }
-                sfCircleShapes[i].move({cShapes[i].m_speedX, cShapes[i].m_speedY});
+        
+        for (size_t i = 0; i < sfCircleShapes.size(); i++) {
+            sf::Vector2f position = sfCircleShapes[i].getPosition();
+            float currentX = position.x;
+            float currentY = position.y;
+            
+            if (currentX < 0 || currentX + 2 * cShapes[i].m_radius > wWidth) { 
+                cShapes[i].m_speedX *= -1.f;
+            }
+            if (currentY < 0 || currentY + 2 * cShapes[i].m_radius > wHeight) {
+                cShapes[i].m_speedY *= -1.f;
+            }
+            sfCircleShapes[i].move({cShapes[i].m_speedX, cShapes[i].m_speedY});
+            if (cShapes[i].m_isAlive) {
                 window.draw(sfCircleShapes[i]);
-
-                sfCircleTexts[i].move({cShapes[i].m_speedX, cShapes[i].m_speedY});
-                window.draw(sfCircleTexts[i]);
             }
 
-            for (size_t i = 0; i < sfRectShapes.size(); i++) {
-                sf::Vector2f position = sfRectShapes[i].getPosition();
-                float currentX = position.x;
-                float currentY = position.y;
-                
-                if (currentX < 0 || currentX + rShapes[i].m_w > wWidth) { 
-                    rShapes[i].m_speedX *= -1.f;
-                }
-                if (currentY < 0 || currentY + rShapes[i].m_h > wHeight) {
-                    rShapes[i].m_speedY *= -1.f;
-                }
-                sfRectShapes[i].move({rShapes[i].m_speedX, rShapes[i].m_speedY});
-                window.draw(sfRectShapes[i]);
-
-                sfRectTexts[i].move({rShapes[i].m_speedX, rShapes[i].m_speedY});
-                window.draw(sfRectTexts[i]);
+            sfCircleTexts[i].move({cShapes[i].m_speedX, cShapes[i].m_speedY});
+            if (cShapes[i].m_isTextAlive) {
+                window.draw(sfCircleTexts[i]);
             }
         }
 
+        for (size_t i = 0; i < sfRectShapes.size(); i++) {
+            sf::Vector2f position = sfRectShapes[i].getPosition();
+            float currentX = position.x;
+            float currentY = position.y;
+            
+            if (currentX < 0 || currentX + rShapes[i].m_w > wWidth) { 
+                rShapes[i].m_speedX *= -1.f;
+            }
+            if (currentY < 0 || currentY + rShapes[i].m_h > wHeight) {
+                rShapes[i].m_speedY *= -1.f;
+            }
+            sfRectShapes[i].move({rShapes[i].m_speedX, rShapes[i].m_speedY});
+            if (rShapes[i].m_isAlive) {
+                window.draw(sfRectShapes[i]);
+            }
+
+            sfRectTexts[i].move({rShapes[i].m_speedX, rShapes[i].m_speedY});
+            if (rShapes[i].m_isTextAlive) {
+                window.draw(sfRectTexts[i]);
+            }
+        }
+    
         if (drawText)       // draw the text if the boolean is true
         {
             window.draw(text);
